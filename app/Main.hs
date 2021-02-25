@@ -73,8 +73,15 @@ main = do
   --waitLineToRunCont cont
   --let cont2 = cont >>= \i -> putStrLn $ i ++ " some additional text"
   --waitLineToRunCont cont2
-  --let cont2 = fmap (\i -> i ++ " some additional text") cont
-  waitLineToRunCont3 cont
+  let cont2 = fmap (fmap (fmap (\i -> i ++ " some additional text"))) cont
+  --let cont3 = cont >>= \str -> return $ str ++ "some additional txt"
+  let cont4 = cont >>= \maybeEither -> case maybeEither of
+                          Nothing -> return "~~~ still running"
+                          Just (Left e) -> return "~~~ error"
+                          Just (Right x) -> return $ "~~~ result: " ++ (show x)
+  --waitLineToRunCont3 cont
+  --waitLineToRunCont3 cont3
+  waitLineToRunCont4 cont4
 
 waitLineToRunCont3 :: Show a => Cont (IO ()) (Maybe (Either SomeException a)) -> IO ()
 waitLineToRunCont3 cont = do
@@ -88,3 +95,12 @@ waitLineToRunCont3 cont = do
           Just (Left e) -> putStrLn ">>>error"
           Just (Right x) -> putStrLn $ ">>>result: " ++ (show x)
       waitLineToRunCont3 cont
+
+waitLineToRunCont4 :: Cont (IO ()) String -> IO ()
+waitLineToRunCont4 cont = do
+  l <- getLine
+  if l == "q"
+    then return ()
+    else do
+      runCont cont putStrLn
+      waitLineToRunCont4 cont
